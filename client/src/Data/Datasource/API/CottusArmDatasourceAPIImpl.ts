@@ -6,6 +6,10 @@ import {ArticulationAPIEntity} from "./Entity/ArticulationAPIEntity";
 import {Articulation} from "../../../Domain/Models/Articulation";
 import {Vector3D} from "../../../Domain/Models/maths/Vector3D";
 import {Vector3DAPIEntity} from "./Entity/Vector3DAPIEntity";
+import { BASE_WEBSOCKET_URL } from "../../../Constants";
+import {useWebSocket} from "../../../Hooks/SocketProvider";
+import WebsocketDatasource from "./WebsocketDatasource";
+import {DatasourceObserver} from "../Observer/DatasourceObserver";
 
 /**
  * API Implementation of a datasource for the CottusArm
@@ -13,12 +17,23 @@ import {Vector3DAPIEntity} from "./Entity/Vector3DAPIEntity";
  * Its role is to get an instance of the {@link CottusArmAPIEntity} object through
  * the API and then convert it to the model's instance {@link CottusArm} 
  */
-export default class CottusArmDatasourceAPIImpl implements CottusArmDatasource {
-    async getCottusArm(): Promise<CottusArm> {
-        let response = await typedFetch<CottusArmAPIEntity>("/api/cottus-arm");
-        let data = await response.json();
-        return { articulations: data.articulations.map(mapEntity) };
+export default class CottusArmDatasourceAPIImpl
+    extends WebsocketDatasource<CottusArmAPIEntity>
+    implements CottusArmDatasource 
+{
+    private readonly subscribers: Set<DatasourceObserver<CottusArm>> = new Set();
+
+    constructor() { super("/api/cottus-arm"); }
+    
+    protected onMessageReceived(msg: CottusArmAPIEntity): void {
+        const arm: CottusArm = { articulations: msg.articulations.map(mapEntity) };
+        
+        this.subscribers.forEach(subscriber => subscriber.onUpdate(arm));
     }
+
+    subscribe(subscriber: DatasourceObserver<CottusArm>): void { this.subscribers.add(subscriber); }
+    unsubscribe(subscriber: DatasourceObserver<CottusArm>): void { this.subscribers.delete(subscriber); }
+
 }
 
 function mapEntity(apiEntity: ArticulationAPIEntity): Articulation {

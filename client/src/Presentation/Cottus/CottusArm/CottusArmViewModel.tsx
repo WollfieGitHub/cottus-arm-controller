@@ -7,13 +7,9 @@ import CottusArmUseCase from "../../../Domain/UseCases/CottusArmUseCase";
 export default function useCottusArmViewModel() {
     const [ cottusArm, setCottusArm ] = useState<CottusArm>();
     
-    const UseCase = new CottusArmUseCase(
-        new CottusArmRepositoryImpl(new CottusArmDatasourceAPIImpl())
-    );
+    const UseCase = new CottusArmUseCase( new CottusArmRepositoryImpl(new CottusArmDatasourceAPIImpl()) );
     
-    async function getCottusArm() {
-        setCottusArm(await UseCase.getCottusArm());
-    }
+    UseCase.subscribe((data) => { setCottusArm(data); })
     
-    return { getCottusArm, cottusArm, };
+    return { cottusArm };
 }

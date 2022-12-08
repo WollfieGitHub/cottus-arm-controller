@@ -79,6 +79,14 @@ export class Vector3D {
         return Vector3D.Zero;
     }
 
+    rotatedAtPointUsing(eulerAngles: Vector3D, point: Vector3D): Vector3D {
+        return this.subtract(point)
+            .rotatedAtOriginAround(0, eulerAngles.x)
+            .rotatedAtOriginAround(1, eulerAngles.y)
+            .rotatedAtOriginAround(2, eulerAngles.z)
+            .add(point);
+    }
+    
     rotatedAtOriginUsing(eulerAngles: Vector3D): Vector3D {
         return this.rotatedAtOriginAround(0, eulerAngles.x)
             .rotatedAtOriginAround(1, eulerAngles.y)

@@ -11,7 +11,7 @@ const xReferentialRange: number = 1000.0;
 const yReferentialRange: number = 1000.0;
 const zReferentialRange: number = 1000.0;
 
-export function DrawReferential(
+export function drawReferential(
     ctx: CanvasRenderingContext2D,
     base: Projection
 ) {
@@ -23,20 +23,16 @@ function drawReferentialGrid(
     ctx: CanvasRenderingContext2D,
     base: Projection,
 ) {
-    ctx.lineWidth = 1.0;
     ctx.strokeStyle = new Color(255, 255, 255, 125).toRgbString()
     let gridLineBegin: Vector3D, gridLineEnd: Vector3D;
     // Draw the grid for the x coordinates
     for (let x = 1; x < xReferentialRange/xGridSpacing; x++) {
-        gridLineBegin = base.project(
+        [ gridLineBegin, gridLineEnd ] = base.projectAll([
             new Vector3D(+yReferentialRange/2.0, 0, 0)
-                .add(new Vector3D(0, xGridSpacing*x - xReferentialRange/2.0, 0))
-        );
-        
-        gridLineEnd = base.project(
+                .add(new Vector3D(0, xGridSpacing*x - xReferentialRange/2.0, 0)),
             new Vector3D(-yReferentialRange/2.0, 0, 0)
                 .add(new Vector3D(0, xGridSpacing*x -xReferentialRange/2.0, 0))
-        );
+        ]);
 
         ctx.beginPath();
         ctx.moveTo(gridLineBegin.x, gridLineBegin.y);
@@ -45,14 +41,12 @@ function drawReferentialGrid(
     }
     // Draw the grid for the y coordinate
     for (let y = 1; y < yReferentialRange/yGridSpacing; y++) {
-        gridLineBegin = base.project(
+        [ gridLineBegin, gridLineEnd ] = base.projectAll([
             new Vector3D(0, +xReferentialRange/2.0, 0)
-                .add(new Vector3D(xGridSpacing*y-xReferentialRange/2.0, 0, 0))
-        );
-        gridLineEnd = base.project(
+                .add(new Vector3D(xGridSpacing*y-xReferentialRange/2.0, 0, 0)),
             new Vector3D(0, -xReferentialRange/2.0, 0)
                 .add(new Vector3D(xGridSpacing*y-xReferentialRange/2.0, 0, 0))
-        );
+        ]);
         
         ctx.beginPath();
         ctx.moveTo(gridLineBegin.x, gridLineBegin.y);
@@ -65,20 +59,25 @@ function drawReferentialAxis(
     ctx: CanvasRenderingContext2D,
     base: Projection,
 ) {
-    const drawAxis = (axis: Axis3D, range: number, color: Color) => {
+    const defaultLineWidth = ctx.lineWidth;
+    const drawAxis = (axis: Axis3D, range: number, color: Color, base: Projection) => {
         ctx.strokeStyle = color.toRgbString();
-        
-        const { x: x0, y: y0 } = base.project(Vector3D.Zero);
-        const { x: x1, y: y1 } = base.project(axis.unitVector.scale(range));
-        
+
+        const [ v0, v1 ] = base.projectAll([
+            Vector3D.Zero, axis.unitVector.scale(range)
+        ]);
+        const { x: x0, y: y0 } = v0;
+        const { x: x1, y: y1 } = v1;
+
         ctx.beginPath();
         ctx.moveTo(x0, y0);
         ctx.lineTo(x1, y1);
         ctx.stroke();
     }
     
-    ctx.lineWidth = 2.0;
-    drawAxis(Axis3D.X, xReferentialRange, Color.Red);
-    drawAxis(Axis3D.Y, yReferentialRange, Color.Green);
-    drawAxis(Axis3D.Z, zReferentialRange, Color.Blue);
+    ctx.lineWidth = defaultLineWidth*2;
+    drawAxis(Axis3D.X, xReferentialRange/1.9, Color.Red, base);
+    drawAxis(Axis3D.Y, yReferentialRange/1.9, Color.Green, base);
+    drawAxis(Axis3D.Z, zReferentialRange/1.9, Color.Blue, base);
+    ctx.lineWidth = defaultLineWidth;
 }
