@@ -1,0 +1,27 @@
+
+version: '3.8'
+
+services:
+  mongodb_container:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_db_data_container:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=animations
+      - MONGO_INITDB_ROOT_USERNAME=cottusarm
+      - MONGO_INITDB_ROOT_PASSWORD=cottusarm_s3cur3
+
+  quarkus-service:
+    build:
+      context: .
+      dockerfile: src/main/docker/Dockerfile.native
+    image: wollfie:native
+    ports:
+      - "8080:8080"  # the HTTP endpoint
+        
+volumes:
+  mongo_db_data_container:
+    
+    
